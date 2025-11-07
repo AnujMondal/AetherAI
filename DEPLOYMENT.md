@@ -19,6 +19,7 @@ This project is configured to deploy both the frontend and backend API on Vercel
 3. **Import your GitHub repository: `AnujMondal/AetherAI`**
 
 4. **Configure the project:**
+
    - **Framework Preset**: Other (or leave as detected)
    - **Root Directory**: `./` (root)
    - **Build Command**: `npm run vercel-build` (or leave default)
@@ -26,6 +27,7 @@ This project is configured to deploy both the frontend and backend API on Vercel
    - **Install Command**: `npm install`
 
 5. **Add ALL Environment Variables:**
+
    ```
    DATABASE_URL=your_postgresql_connection_string
    CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
@@ -39,7 +41,7 @@ This project is configured to deploy both the frontend and backend API on Vercel
    VITE_BASE_URL=https://your-domain.vercel.app
    VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
    ```
-   
+
    **Note**: After first deployment, update `CLIENT_URL` and `VITE_BASE_URL` with your actual Vercel URL and redeploy.
 
 6. **Click "Deploy"**
@@ -104,27 +106,32 @@ CREATE TABLE creations (
 
 ### Common Issues:
 
-1. **CORS Errors**: 
+1. **CORS Errors**:
+
    - Make sure `CLIENT_URL` environment variable is set correctly
    - Update Clerk allowed origins
 
-2. **Environment Variables**: 
+2. **Environment Variables**:
+
    - Double-check all environment variables are set correctly
    - Remember to redeploy after updating variables
 
-3. **Database Connection**: 
+3. **Database Connection**:
+
    - Ensure your Neon database URL is accessible from Vercel
    - Check if database connection string includes SSL mode
 
-4. **Build Failures**: 
+4. **Build Failures**:
+
    - Check the build logs in Vercel dashboard
    - Ensure all dependencies are listed in package.json
 
-5. **API 404 Errors**: 
+5. **API 404 Errors**:
+
    - Verify the API routes are working: `https://your-domain.vercel.app/api`
    - Check serverless function logs in Vercel
 
-6. **Function Timeout**: 
+6. **Function Timeout**:
    - Vercel serverless functions have a 10-second timeout on Hobby plan
    - Image generation might take longer - consider upgrading Vercel plan if needed
 
@@ -144,6 +151,7 @@ CREATE TABLE creations (
 ## Architecture
 
 Your deployed application structure:
+
 ```
 https://your-domain.vercel.app/          → React Frontend (Static)
 https://your-domain.vercel.app/api       → Express API (Serverless)

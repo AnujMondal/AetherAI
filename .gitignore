@@ -40,9 +40,7 @@ lerna-debug.log*
 .parcel-cache
 .eslintcache
 
-# Uploads
+# Uploads and temporary files
 uploads/
+server/uploads/
 *.pdf
-*.png
-*.jpg
-*.jpeg

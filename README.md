@@ -16,6 +16,7 @@ A full-stack AI-powered SaaS platform built with React and Node.js, featuring mu
 ## Tech Stack
 
 ### Frontend
+
 - React
 - Vite
 - Tailwind CSS
@@ -25,6 +26,7 @@ A full-stack AI-powered SaaS platform built with React and Node.js, featuring mu
 - React Hot Toast
 
 ### Backend
+
 - Node.js
 - Express
 - PostgreSQL (Neon)
@@ -35,6 +37,7 @@ A full-stack AI-powered SaaS platform built with React and Node.js, featuring mu
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js (v18 or higher)
 - npm or yarn
 - PostgreSQL database (Neon recommended)
@@ -45,12 +48,14 @@ A full-stack AI-powered SaaS platform built with React and Node.js, featuring mu
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone <your-repo-url>
 cd AetherAI
 ```
 
 2. Install dependencies:
+
 ```bash
 # Install server dependencies
 cd server
@@ -64,6 +69,7 @@ npm install
 3. Set up environment variables:
 
 Create `.env` file in the `server` directory:
+
 ```env
 DATABASE_URL=your_postgresql_connection_string
 CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
@@ -76,6 +82,7 @@ CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 ```
 
 Create `.env` file in the `client` directory:
+
 ```env
 VITE_BASE_URL=http://localhost:3000
 VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
@@ -96,11 +103,13 @@ The server will run on `http://localhost:3000` and the client on `http://localho
 ## Deployment
 
 ### Backend (Server)
+
 - Deploy to platforms like Railway, Render, or Heroku
 - Set all environment variables
 - Ensure PostgreSQL database is accessible
 
 ### Frontend (Client)
+
 - Deploy to Vercel, Netlify, or similar platforms
 - Set `VITE_BASE_URL` to your deployed backend URL
 - Set `VITE_CLERK_PUBLISHABLE_KEY`

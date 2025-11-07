@@ -1,23 +1,31 @@
-# Deployment Guide for AetherAI
+# Deployment Guide for AetherAI on Vercel
 
 ## Prerequisites
+
 - GitHub account (✅ Done - https://github.com/AnujMondal/AetherAI)
 - Vercel account (create at https://vercel.com)
 - All environment variables ready
 
-## Deploy Backend (Server) on Vercel
+## Single Deployment on Vercel (Both Frontend & Backend)
 
-### Option 1: Deploy Server to Vercel
+This project is configured to deploy both the frontend and backend API on Vercel in a single deployment.
 
-1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
-2. Click "Add New" → "Project"
-3. Import your GitHub repository: `AnujMondal/AetherAI`
-4. Configure the project:
-   - **Framework Preset**: Other
-   - **Root Directory**: `server`
-   - **Build Command**: (leave empty)
-   - **Output Directory**: (leave empty)
-5. Add Environment Variables:
+### Step-by-Step Deployment:
+
+1. **Go to [Vercel Dashboard](https://vercel.com/dashboard)**
+
+2. **Click "Add New" → "Project"**
+
+3. **Import your GitHub repository: `AnujMondal/AetherAI`**
+
+4. **Configure the project:**
+   - **Framework Preset**: Other (or leave as detected)
+   - **Root Directory**: `./` (root)
+   - **Build Command**: `npm run vercel-build` (or leave default)
+   - **Output Directory**: `client/dist`
+   - **Install Command**: `npm install`
+
+5. **Add ALL Environment Variables:**
    ```
    DATABASE_URL=your_postgresql_connection_string
    CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
@@ -27,53 +35,43 @@
    CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
    CLOUDINARY_API_KEY=your_cloudinary_api_key
    CLOUDINARY_API_SECRET=your_cloudinary_api_secret
-   ```
-6. Click "Deploy"
-7. Copy your deployed backend URL (e.g., `https://aether-ai-server.vercel.app`)
-
-### Option 2: Deploy Server to Railway (Recommended for Node.js backends)
-
-1. Go to [Railway](https://railway.app)
-2. Click "New Project" → "Deploy from GitHub repo"
-3. Select `AnujMondal/AetherAI`
-4. Select the `server` directory as root
-5. Add all environment variables
-6. Deploy and get your backend URL
-
-## Deploy Frontend (Client) on Vercel
-
-1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
-2. Click "Add New" → "Project"
-3. Import your GitHub repository again: `AnujMondal/AetherAI`
-4. Configure the project:
-   - **Framework Preset**: Vite
-   - **Root Directory**: `client`
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-   - **Install Command**: `npm install`
-5. Add Environment Variables:
-   ```
-   VITE_BASE_URL=<your-deployed-backend-url>
+   CLIENT_URL=https://your-domain.vercel.app
+   VITE_BASE_URL=https://your-domain.vercel.app
    VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
    ```
-6. Click "Deploy"
+   
+   **Note**: After first deployment, update `CLIENT_URL` and `VITE_BASE_URL` with your actual Vercel URL and redeploy.
+
+6. **Click "Deploy"**
+
+7. **Wait for deployment to complete** (usually 2-5 minutes)
+
+8. **After deployment:**
+   - Your frontend will be at: `https://your-project.vercel.app`
+   - Your API will be at: `https://your-project.vercel.app/api`
 
 ## Post-Deployment Steps
 
-### 1. Update Clerk Settings
+### 1. Update Environment Variables with Actual URL
+
+After your first deployment, you need to update the URLs:
+
+1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables
+2. Update these variables with your actual Vercel URL:
+   - `CLIENT_URL` = `https://your-actual-domain.vercel.app`
+   - `VITE_BASE_URL` = `https://your-actual-domain.vercel.app`
+3. Go to Deployments tab → Click "..." on latest deployment → "Redeploy"
+
+### 2. Update Clerk Settings
+
 - Go to [Clerk Dashboard](https://dashboard.clerk.com)
 - Navigate to your application
-- Add your Vercel frontend URL to:
-  - **Allowed redirect URLs**
-  - **Allowed origins (CORS)**
-
-### 2. Update Environment Variables
-If you need to update any environment variables:
-- Go to Vercel Dashboard → Your Project → Settings → Environment Variables
-- Update the variables
-- Redeploy the project
+- Add your Vercel URL to:
+  - **Allowed redirect URLs**: `https://your-domain.vercel.app/*`
+  - **Allowed origins (CORS)**: `https://your-domain.vercel.app`
 
 ### 3. Test Your Deployment
+
 - Visit your frontend URL
 - Test all features:
   - Sign in/Sign up
@@ -106,19 +104,52 @@ CREATE TABLE creations (
 
 ### Common Issues:
 
-1. **CORS Errors**: Make sure your backend allows requests from your frontend domain
-2. **Environment Variables**: Double-check all environment variables are set correctly
-3. **Database Connection**: Ensure your database URL is accessible from Vercel
-4. **Build Failures**: Check the build logs in Vercel dashboard
-5. **API Timeouts**: Vercel has a 10-second timeout for serverless functions (consider Railway for backend)
+1. **CORS Errors**: 
+   - Make sure `CLIENT_URL` environment variable is set correctly
+   - Update Clerk allowed origins
 
-## Alternative Backend Hosting
+2. **Environment Variables**: 
+   - Double-check all environment variables are set correctly
+   - Remember to redeploy after updating variables
 
-If Vercel serverless has issues with your backend, consider:
-- **Railway**: https://railway.app (Recommended)
-- **Render**: https://render.com
-- **Heroku**: https://heroku.com
-- **Fly.io**: https://fly.io
+3. **Database Connection**: 
+   - Ensure your Neon database URL is accessible from Vercel
+   - Check if database connection string includes SSL mode
+
+4. **Build Failures**: 
+   - Check the build logs in Vercel dashboard
+   - Ensure all dependencies are listed in package.json
+
+5. **API 404 Errors**: 
+   - Verify the API routes are working: `https://your-domain.vercel.app/api`
+   - Check serverless function logs in Vercel
+
+6. **Function Timeout**: 
+   - Vercel serverless functions have a 10-second timeout on Hobby plan
+   - Image generation might take longer - consider upgrading Vercel plan if needed
+
+### How to Check Logs:
+
+1. Go to Vercel Dashboard → Your Project
+2. Click on "Functions" tab to see API function logs
+3. Click on "Deployments" to see build logs
+
+## Important Notes
+
+- ⚠️ **Vercel Hobby plan** has serverless function limits (10s timeout, 50MB max size)
+- ⚠️ **File uploads** work differently on serverless - multer temp files are in `/tmp`
+- ⚠️ **Cold starts** may cause first API request to be slower
+- ⚠️ Make sure your `.env` files are NOT committed to Git (they're in `.gitignore`)
+
+## Architecture
+
+Your deployed application structure:
+```
+https://your-domain.vercel.app/          → React Frontend (Static)
+https://your-domain.vercel.app/api       → Express API (Serverless)
+https://your-domain.vercel.app/api/ai/*  → AI Routes
+https://your-domain.vercel.app/api/user/*→ User Routes
+```
 
 ## Domain Setup (Optional)
 

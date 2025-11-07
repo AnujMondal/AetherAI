@@ -2,6 +2,8 @@
 
 A full-stack AI-powered SaaS platform built with React and Node.js, featuring multiple AI tools for content creation and image manipulation.
 
+🚀 **Live Demo:** [https://aether-ai-nine.vercel.app/](https://aether-ai-nine.vercel.app/)
+
 ## Features
 
 - 📝 **AI Article Writer** - Generate articles with customizable length

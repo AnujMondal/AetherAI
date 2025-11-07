@@ -4,7 +4,8 @@ import { clerkClient } from "@clerk/express";
 import axios from "axios";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
-// import { PDFParse } from "pdf-parse"; // Disabled for serverless compatibility
+// PDF parsing disabled for serverless - use Render.com for backend if needed
+// import { PDFParse } from "pdf-parse";
 import { GoogleGenAI } from "@google/genai";
 
 const AI = new OpenAI({
@@ -176,12 +177,10 @@ export const generateImage = async (req, res) => {
   } catch (error) {
     console.log("Generate Image Error:", error.message);
     console.error("Full error:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: error.message || "Failed to generate image",
-      });
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to generate image",
+    });
   }
 };
 
@@ -270,47 +269,37 @@ export const resumeReview = async (req, res) => {
       });
     }
 
-    // Temporary message for serverless environment
-    // PDF parsing requires native dependencies not available in Vercel serverless
-    return res.json({
-      success: false,
-      message: "Resume review feature is temporarily unavailable on the deployed version. This feature requires native dependencies that are not compatible with serverless environments. Please try using the local version of the application, or we're working on a serverless-compatible solution.",
+    console.log("Reading PDF file...");
+    const fileBuffer = fs.readFileSync(resume.path);
+    const base64Data = fileBuffer.toString('base64');
+
+    console.log("Uploading to Gemini File API...");
+    // Upload file to Gemini
+    const uploadResponse = await genAI.uploadFile({
+      file: {
+        data: base64Data,
+        mimeType: "application/pdf"
+      },
+      displayName: "resume.pdf"
     });
 
-    /* Original code commented out for serverless compatibility
-    const dataBuffer = fs.readFileSync(resume.path);
+    console.log("File uploaded, processing with Gemini...");
+    
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    
+    const result = await model.generateContent([
+      {
+        fileData: {
+          mimeType: uploadResponse.file.mimeType,
+          fileUri: uploadResponse.file.uri
+        }
+      },
+      {
+        text: "Extract all the text content from this resume PDF and then provide a detailed professional review. Include: 1) Strengths of the resume, 2) Weaknesses and areas for improvement, 3) Specific suggestions to make it more effective, 4) Overall rating and recommendation."
+      }
+    ]);
 
-    console.log("PDF file loaded, parsing...");
-    const parser = new PDFParse({ data: dataBuffer });
-    const result = await parser.getText();
-    console.log("PDF parsed, text length:", result?.text?.length);
-
-    // Check if PDF text was extracted successfully
-    if (!result || !result.text || result.text.trim() === "") {
-      return res.json({
-        success: false,
-        message:
-          "Could not extract text from the PDF. Please ensure the file is a valid PDF with readable text.",
-      });
-    }
-
-    const prompt = `Review the following resume and provide constructive feedback on its strengths, weaknesses, and areas for improvement. Resume Content: \n\n${result.text}`;
-
-    console.log("Sending to AI for review...");
-    const response = await AI.chat.completions.create({
-      model: "gemini-2.5-flash",
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 2048,
-    });
-
-    console.log("AI response received:", JSON.stringify(response, null, 2));
-    const content = response.choices?.[0]?.message?.content || "";
+    const content = result.response.text();
     console.log("Content length:", content?.length);
 
     // Ensure content is not null or empty before saving to database
@@ -327,7 +316,6 @@ export const resumeReview = async (req, res) => {
 
     console.log("Success! Sending response to client");
     res.json({ success: true, content });
-    */
   } catch (error) {
     console.log("Resume Review Error:", error);
     res.json({

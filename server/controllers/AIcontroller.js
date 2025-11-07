@@ -262,44 +262,49 @@ export const resumeReview = async (req, res) => {
       return res.json({ success: false, message: "No resume file uploaded." });
     }
 
-    if (resume.size > 5 * 1024 * 1024) {
+    if (resume.size > 20 * 1024 * 1024) {
       return res.json({
         success: false,
-        message: "Resume file size exceeds allowed size (5MB).",
+        message: "Resume file size exceeds 20MB limit.",
       });
     }
 
     console.log("Reading PDF file...");
     const fileBuffer = fs.readFileSync(resume.path);
-    const base64Data = fileBuffer.toString('base64');
+    const base64Data = fileBuffer.toString("base64");
 
-    console.log("Uploading to Gemini File API...");
-    // Upload file to Gemini
-    const uploadResponse = await genAI.uploadFile({
-      file: {
-        data: base64Data,
-        mimeType: "application/pdf"
-      },
-      displayName: "resume.pdf"
-    });
+    console.log("Processing PDF with Gemini API (inline data)...");
 
-    console.log("File uploaded, processing with Gemini...");
-    
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    
-    const result = await model.generateContent([
+    // Use inline PDF data approach (works for PDFs under 20MB)
+    const response = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
-        fileData: {
-          mimeType: uploadResponse.file.mimeType,
-          fileUri: uploadResponse.file.uri
-        }
+        contents: [
+          {
+            parts: [
+              {
+                inline_data: {
+                  mime_type: "application/pdf",
+                  data: base64Data,
+                },
+              },
+              {
+                text: "Extract all the text content from this resume PDF and then provide a detailed professional review. Include: 1) Strengths of the resume, 2) Weaknesses and areas for improvement, 3) Specific suggestions to make it more effective, 4) Overall rating and recommendation.",
+              },
+            ],
+          },
+        ],
       },
       {
-        text: "Extract all the text content from this resume PDF and then provide a detailed professional review. Include: 1) Strengths of the resume, 2) Weaknesses and areas for improvement, 3) Specific suggestions to make it more effective, 4) Overall rating and recommendation."
+        headers: {
+          "Content-Type": "application/json",
+        },
+        timeout: 60000, // 60 second timeout
       }
-    ]);
+    );
 
-    const content = result.response.text();
+    const content =
+      response.data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     console.log("Content length:", content?.length);
 
     // Ensure content is not null or empty before saving to database
@@ -314,10 +319,22 @@ export const resumeReview = async (req, res) => {
     console.log("Saving to database...");
     await sql` INSERT INTO creations (user_id, prompt,content,type) VALUES (${userId}, 'Review the uploaded resume', ${content}, 'resume-review')`;
 
+    // Clean up uploaded file
+    fs.unlinkSync(resume.path);
+
     console.log("Success! Sending response to client");
     res.json({ success: true, content });
   } catch (error) {
     console.log("Resume Review Error:", error);
+    console.error("Full error details:", error.response?.data || error.message);
+    
+    // Clean up file on error
+    if (req.file?.path) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (e) {}
+    }
+
     res.json({
       success: false,
       message: error.message || "Failed to process resume",

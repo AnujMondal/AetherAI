@@ -327,7 +327,7 @@ export const resumeReview = async (req, res) => {
   } catch (error) {
     console.log("Resume Review Error:", error);
     console.error("Full error details:", error.response?.data || error.message);
-    
+
     // Clean up file on error
     if (req.file?.path) {
       try {

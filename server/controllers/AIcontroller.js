@@ -4,7 +4,7 @@ import { clerkClient } from "@clerk/express";
 import axios from "axios";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
-import { PDFParse } from "pdf-parse";
+// import { PDFParse } from "pdf-parse"; // Disabled for serverless compatibility
 import { GoogleGenAI } from "@google/genai";
 
 const AI = new OpenAI({
@@ -270,6 +270,14 @@ export const resumeReview = async (req, res) => {
       });
     }
 
+    // Temporary message for serverless environment
+    // PDF parsing requires native dependencies not available in Vercel serverless
+    return res.json({
+      success: false,
+      message: "Resume review feature is temporarily unavailable on the deployed version. This feature requires native dependencies that are not compatible with serverless environments. Please try using the local version of the application, or we're working on a serverless-compatible solution.",
+    });
+
+    /* Original code commented out for serverless compatibility
     const dataBuffer = fs.readFileSync(resume.path);
 
     console.log("PDF file loaded, parsing...");
@@ -319,6 +327,7 @@ export const resumeReview = async (req, res) => {
 
     console.log("Success! Sending response to client");
     res.json({ success: true, content });
+    */
   } catch (error) {
     console.log("Resume Review Error:", error);
     res.json({
